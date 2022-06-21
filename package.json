@@ -1,8 +1,11 @@
 {
-  "name": "doc-check",
-  "version": "1.0.0",
+  "name": "ts-doc-check",
+  "version": "1.0.7",
   "description": "Type check TypeScript and JavaScript snippets in markdown documents",
-  "main": "./dist/src/index.js",
+  "main": "./dist/main.js",
+  "bin": {
+    "doc-check": "./bin/doc-check.js"
+  },
   "scripts": {
     "build": "rimraf dist && tsc",
     "start": "npm run build && node ./dist/src/index.js"
@@ -11,6 +14,7 @@
   "license": "ISC",
   "type": "module",
   "files": [
+    "bin",
     "dist"
   ],
   "devDependencies": {
