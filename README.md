@@ -1,4 +1,4 @@
-# DocCheck
+# 📚 DocCheck
 
 DocCheck is a command line tool for type checking your markdown documentation so your code snippets will never go out of date.
 
@@ -62,3 +62,11 @@ const { code } = project.checkMarkdownSync();
 process.exit(code);
 
 ```
+
+## How to use DocCheck?
+
+It's recommended that you setup DocCheck as part of your build pipeline. You can also integrate it with husky.
+
+## Warning 🔥
+
+DocCheck is still experimental. Some things may not work as expected! 
