@@ -179,6 +179,8 @@ export class Project extends TsmProject {
 
     const mappedDiagnostics = diagnostics
       // Diagnostic hack - makes it look like the error is in the markdown file
+      // TODO: recursively follow diagnostic message chains (message chains have
+      //       incorrect file names)
       .map(
         ({ diagnostic, content }): ts.Diagnostic => ({
           ...diagnostic,
