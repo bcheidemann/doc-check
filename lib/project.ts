@@ -105,6 +105,7 @@ export class Project extends TsmProject {
       .map((content) => {
         if (
           content.type === "code" &&
+          // TODO: Handle expanded langs (e.g. typescript)
           (content.lang === "ts" ||
             content.lang === "tsx" ||
             content.lang === "js" ||
@@ -122,7 +123,9 @@ export class Project extends TsmProject {
             .getFirstChildIfKind(ts.SyntaxKind.SyntaxList)
             ?.getFirstChildIfKind(ts.SyntaxKind.SingleLineCommentTrivia);
           if (firstLineComment) {
-            const maybeFilePath = firstLineComment.getText().substring("// ".length);
+            const maybeFilePath = firstLineComment
+              .getText()
+              .substring("// ".length);
             if (maybeFilePath.endsWith(`.${content.lang}`)) {
               this.removeSourceFile(sourceFile);
               virtualSnippetFile.path = maybeFilePath;
@@ -180,21 +183,30 @@ export class Project extends TsmProject {
         ({ diagnostic, content }): ts.Diagnostic => ({
           ...diagnostic,
           source: file.text,
+          // FIXME: This is inaccurate in some situations
           start: diagnostic.start! + content.position!.start.offset! + 1,
           file: markdownSourceFile,
         })
       );
 
     this.diagnosticLogger.log(mappedDiagnostics);
+
+    return {
+      code: mappedDiagnostics.some(
+        (diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error
+      )
+        ? 1
+        : 0,
+    };
   }
 
   private checkMarkdownFilesSync() {
-    return this.findMarkdownFiles().forEach((path) => {
+    return this.findMarkdownFiles().map((path) =>
       this.checkMarkdownFileSync({
         path,
         text: this.fileSystem.readFileSync(path),
-      });
-    });
+      })
+    );
   }
 
   private logConfigFileDiagnostics() {
@@ -207,6 +219,10 @@ export class Project extends TsmProject {
 
   public checkMarkdownSync() {
     this.logConfigFileDiagnostics();
-    this.checkMarkdownFilesSync();
+    return {
+      code: this.checkMarkdownFilesSync().some(({ code }) => Boolean(code))
+        ? 1
+        : 0,
+    };
   }
 }
