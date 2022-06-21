@@ -1,6 +1,6 @@
 {
   "name": "ts-doc-check",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Type check TypeScript and JavaScript snippets in markdown documents",
   "main": "./dist/main.js",
   "bin": {
@@ -17,6 +17,10 @@
     "bin",
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bcheidemann/doc-check"
+  },
   "devDependencies": {
     "@types/node": "^18.0.0",
     "rimraf": "^3.0.2",
