@@ -2,6 +2,18 @@
 
 DocCheck is a command line tool for type checking your markdown documentation so your code snippets will never go out of date.
 
+## Installation
+
+```sh
+npm install --save-dev ts-doc-check
+```
+
+## Usage
+
+```sh
+npx doc-check
+```
+
 ## How does it work?
 
 DocCheck uses the typescript compiler API to check your markdown code snippets. Code snippets are treated as though they are a part of your project, so you can import from files in your project. In fact, you can even import from other code snippets!
