@@ -2,6 +2,7 @@
 
 - [ ] Add config file (doccheckrc?)
 - [ ] Add include/ignore configs
+- [ ] Add watch mode?
 - [ ] Better error messages for wrong file types (.js without allowJs)
 - [ ] Module aliases (e.g. alias your library name to your src directory)
 - [ ] Custome preludes (to avoid repeating imports every snippet)
