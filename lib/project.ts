@@ -1,8 +1,6 @@
 import { Code } from "mdast";
 import { fromMarkdown } from "mdast-util-from-markdown";
-import { join } from "path";
 import {
-  Diagnostic,
   Project as TsmProject,
   ProjectOptions,
   ts,
@@ -42,7 +40,7 @@ export class Project extends TsmProject {
       /^(?:.*[\\\/])?node_modules(?:[\\\/].*)?$/,
       /^(?:.*[\\\/])?\.git(?:[\\\/].*)?$/,
     ],
-    include: [/.md$/g],
+    include: [/\.md$/],
     root: "./",
   };
 
@@ -54,9 +52,9 @@ export class Project extends TsmProject {
     });
     this.options = {
       ...Project.DEFAULT_OPTIONS,
+      ...options,
       exclude: concatArray(Project.DEFAULT_OPTIONS.exclude, options.exclude),
       include: concatArray(Project.DEFAULT_OPTIONS.include, options.include),
-      ...options,
     };
   }
 

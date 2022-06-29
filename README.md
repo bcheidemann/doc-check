@@ -14,6 +14,12 @@ npm install --save-dev ts-doc-check
 npx doc-check
 ```
 
+For a full list of options:
+
+```sh
+npx doc-check --help
+```
+
 ## How does it work?
 
 DocCheck uses the typescript compiler API to check your markdown code snippets. Code snippets are treated as though they are a part of your project, so you can import from files in your project. In fact, you can even import from other code snippets!
@@ -74,6 +80,31 @@ const { code } = project.checkMarkdownSync();
 process.exit(code);
 
 ```
+
+## Configuration
+
+By default DocCheck will search for a config file named `doc-check.json`. If this is not found, default options will be used.
+
+To specify the config file:
+
+```sh
+npx doc-check --config=<path>
+```
+
+Example `doc-check.json` file:
+
+```json
+{
+  "include": [
+    // regex patterns
+  ],
+  "exclude": [
+    // regex patterns
+  ]
+}
+```
+
+Note that in future, DocCheck will use globs instead of regex.
 
 ## How to use DocCheck?
 
