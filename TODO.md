@@ -2,6 +2,7 @@
 
 - [x] Add config file
 - [x] Add include/exclude configs
+- [ ] Add support for Deno style ignore syntax (ts, ignore)
 - [ ] Use globs for incude/exclude
 - [ ] Add watch mode?
 - [ ] Better error messages for wrong file types (.js without allowJs)
