@@ -26,8 +26,8 @@ DocCheck uses the typescript compiler API to check your markdown code snippets. 
 
 ```ts path=src/example/file1.ts
 // This snippet corresponds to the file path src/example/file1.ts
-// because it has the "path=src/example/file1.ts" metadata (see the)
-// raw markdown
+// because it has the "path=src/example/file1.ts" metadata (see the
+// raw markdown)
 export const SomeCode = `
 
   The first comment line indicates to DocCheck
