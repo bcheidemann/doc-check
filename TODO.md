@@ -3,6 +3,8 @@
 - [x] Add config file
 - [x] Add include/exclude configs
 - [X] Use globs for incude/exclude
+- [X] Add support for Deno style ignore syntax (ts, ignore)
+- [X] Use globs for incude/exclude
 - [ ] Add watch mode?
 - [ ] Better error messages for wrong file types (.js without allowJs)
 - [ ] Module aliases (e.g. alias your library name to your src directory)
