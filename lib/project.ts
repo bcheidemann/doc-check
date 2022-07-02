@@ -1,15 +1,10 @@
+import glob from "glob";
 import { Code } from "mdast";
 import { fromMarkdown } from "mdast-util-from-markdown";
-import {
-  Project as TsmProject,
-  ProjectOptions,
-  ts,
-} from "ts-morph";
-import {
-  DefaultDiagnosticLogger,
-  DiagnosticLogger,
-} from "./diagnostic-logger.js";
+import { Project as TsmProject, ProjectOptions, ts } from "ts-morph";
+import { DefaultLogger, Logger } from "./logger.js";
 import { concatArray } from "./helpers.js";
+import { getSnippetOptions } from "./get-snippet-options.js";
 
 interface File {
   path: string;
@@ -18,13 +13,13 @@ interface File {
 
 type DefaultOptions = Pick<
   Required<Options>,
-  "diagnositcLogger" | "exclude" | "include" | "root"
+  "logger" | "exclude" | "include" | "root"
 >;
 
 export interface Options {
-  diagnositcLogger?: DiagnosticLogger;
-  exclude?: RegExp[];
-  include?: RegExp[];
+  logger?: Logger;
+  exclude?: string[];
+  include?: string;
   root?: string;
   tsProjectOptions?: ProjectOptions;
 }
@@ -35,27 +30,27 @@ export class Project extends TsmProject {
   private options: ResolvedOptions;
 
   static DEFAULT_OPTIONS: DefaultOptions = {
-    diagnositcLogger: new DefaultDiagnosticLogger(),
-    exclude: [
-      /^(?:.*[\\\/])?node_modules(?:[\\\/].*)?$/,
-      /^(?:.*[\\\/])?\.git(?:[\\\/].*)?$/,
-    ],
-    include: [/\.md$/],
+    logger: new DefaultLogger(),
+    exclude: ["**/node_modules/**"],
+    include: "**/*.md",
     root: "./",
   };
 
   constructor(options: Options = {}) {
-    const tsConfigFilePath = ts.findConfigFile("./", ts.sys.fileExists);
+    const resolvedOptions: ResolvedOptions = {
+      ...Project.DEFAULT_OPTIONS,
+      ...options,
+      exclude: concatArray(Project.DEFAULT_OPTIONS.exclude, options.exclude),
+    };
+    const tsConfigFilePath = ts.findConfigFile(
+      resolvedOptions.root,
+      ts.sys.fileExists
+    );
     super({
       tsConfigFilePath: tsConfigFilePath,
       ...options.tsProjectOptions,
     });
-    this.options = {
-      ...Project.DEFAULT_OPTIONS,
-      ...options,
-      exclude: concatArray(Project.DEFAULT_OPTIONS.exclude, options.exclude),
-      include: concatArray(Project.DEFAULT_OPTIONS.include, options.include),
-    };
+    this.options = resolvedOptions;
   }
 
   private get languageService() {
@@ -66,33 +61,30 @@ export class Project extends TsmProject {
     return this.getFileSystem();
   }
 
-  private get diagnosticLogger() {
-    return this.options.diagnositcLogger;
+  private get logger() {
+    return this.options.logger;
   }
 
-  private findMarkdownFiles(dir = this.options.root) {
-    const ents = this.fileSystem.readDirSync(dir);
-    return ents
-      .map((ent): string | string[] => {
-        const path = ent.name;
-        if (this.options.exclude.some((exclude) => exclude.test(path))) {
-          return [];
+  private async findMarkdownFiles() {
+    return await new Promise<string[]>((resolve, reject) => {
+      glob(
+        this.options.include,
+        {
+          cwd: this.options.root,
+          ignore: this.options.exclude,
+        },
+        (err, files) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(files);
+          }
         }
-        if (ent.isDirectory) {
-          return this.findMarkdownFiles(path);
-        }
-        if (
-          ent.isFile &&
-          this.options.include.some((include) => include.test(path))
-        ) {
-          return path;
-        }
-        return [];
-      })
-      .flat();
+      );
+    });
   }
 
-  private checkMarkdownFileSync(file: File) {
+  private checkMarkdownFile(file: File) {
     const markdownAst = fromMarkdown(file.text);
     const diagnostics = new Array<{
       diagnostic: ts.Diagnostic;
@@ -101,42 +93,26 @@ export class Project extends TsmProject {
     let index = 0;
     markdownAst.children
       .map((content) => {
-        if (
-          content.type === "code" &&
-          // TODO: Handle expanded langs (e.g. typescript)
-          (content.lang === "ts" ||
-            content.lang === "tsx" ||
-            content.lang === "js" ||
-            content.lang === "jsx")
-        ) {
-          const virtualSnippetFile: File = {
-            path: `./${file.path}.${index++}.${content.lang}`,
-            text: content.value,
-          };
-          const sourceFile = this.createSourceFile(
-            virtualSnippetFile.path,
-            virtualSnippetFile.text
-          );
-          const firstLineComment = sourceFile
-            .getFirstChildIfKind(ts.SyntaxKind.SyntaxList)
-            ?.getFirstChildIfKind(ts.SyntaxKind.SingleLineCommentTrivia);
-          if (firstLineComment) {
-            const maybeFilePath = firstLineComment
-              .getText()
-              .substring("// ".length);
-            if (maybeFilePath.endsWith(`.${content.lang}`)) {
-              this.removeSourceFile(sourceFile);
-              virtualSnippetFile.path = maybeFilePath;
-              this.createSourceFile(
-                virtualSnippetFile.path,
-                virtualSnippetFile.text
-              );
-            }
+        if (content.type === "code") {
+          const snippetOptions = getSnippetOptions(content);
+          if (
+            !snippetOptions.ignore &&
+            snippetOptions.lang &&
+            ["ts", "tsx", "js", "jsx"].includes(snippetOptions.lang)
+          ) {
+            const virtualSnippetFile: File = {
+              path: snippetOptions.path || `./${file.path}.${index++}.${content.lang}`,
+              text: content.value,
+            };
+            this.createSourceFile(
+              virtualSnippetFile.path,
+              virtualSnippetFile.text
+            );
+            return {
+              virtualSnippetFile,
+              content,
+            };
           }
-          return {
-            virtualSnippetFile,
-            content,
-          };
         }
       })
       .forEach((data) => {
@@ -189,20 +165,20 @@ export class Project extends TsmProject {
         })
       );
 
-    this.diagnosticLogger.log(mappedDiagnostics);
+    this.logger.logDiagnostics(mappedDiagnostics);
 
     return {
-      code: mappedDiagnostics.some(
+      error: mappedDiagnostics.some(
         (diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error
-      )
-        ? 1
-        : 0,
+      ),
     };
   }
 
-  private checkMarkdownFilesSync() {
-    return this.findMarkdownFiles().map((path) =>
-      this.checkMarkdownFileSync({
+  private async checkMarkdownFiles() {
+    const inputs = await this.findMarkdownFiles();
+
+    return inputs.map((path) =>
+      this.checkMarkdownFile({
         path,
         text: this.fileSystem.readFileSync(path),
       })
@@ -210,19 +186,18 @@ export class Project extends TsmProject {
   }
 
   private logConfigFileDiagnostics() {
-    this.diagnosticLogger.log(
+    this.logger.logDiagnostics(
       this.getConfigFileParsingDiagnostics().map(
         (tsmDiagnositc) => tsmDiagnositc.compilerObject
       )
     );
   }
 
-  public checkMarkdownSync() {
+  public async checkMarkdown() {
     this.logConfigFileDiagnostics();
+    const results = await this.checkMarkdownFiles();
     return {
-      code: this.checkMarkdownFilesSync().some(({ code }) => Boolean(code))
-        ? 1
-        : 0,
+      error: results.some(({ error }) => error),
     };
   }
 }

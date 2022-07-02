@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "rimraf dist && tsc",
+    "build:watch": "rimraf dist && tsc -w",
     "start": "npm run build && node ./dist/src/index.js"
   },
   "author": "Ben Heidemann",
@@ -22,12 +23,14 @@
     "url": "https://github.com/bcheidemann/doc-check"
   },
   "devDependencies": {
+    "@types/glob": "^7.2.0",
     "@types/node": "^18.0.0",
     "rimraf": "^3.0.2",
     "typescript": "^4.7.4"
   },
   "dependencies": {
     "commander": "9.3.0",
+    "glob": "^8.0.3",
     "mdast": "3.0.0",
     "mdast-util-from-markdown": "1.2.0",
     "ts-morph": "15.1.0",

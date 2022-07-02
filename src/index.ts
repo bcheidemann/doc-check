@@ -9,5 +9,5 @@ const cliOptions = program
 
 const projectOptions = loadOptionsFromFile(cliOptions.config, false);
 const project = new Project(projectOptions);
-const { code } = project.checkMarkdownSync();
-process.exit(code);
+const { error } = await project.checkMarkdown();
+process.exit(error ? 1 : 0);

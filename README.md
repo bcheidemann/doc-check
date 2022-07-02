@@ -24,9 +24,10 @@ npx doc-check --help
 
 DocCheck uses the typescript compiler API to check your markdown code snippets. Code snippets are treated as though they are a part of your project, so you can import from files in your project. In fact, you can even import from other code snippets!
 
-```ts
-// src/examples/file1.ts
-
+```ts path=src/example/file1.ts
+// This snippet corresponds to the file path src/example/file1.ts
+// because it has the "path=src/example/file1.ts" metadata (see the)
+// raw markdown
 export const SomeCode = `
 
   The first comment line indicates to DocCheck
@@ -64,9 +65,16 @@ console.log(SomeCode);
 */
 ```
 
-```ts
-// src/examples/file2.ts
+You can ignore snippets by specifying the "ignore" metadata after snippet language.
 
+```ts ignore
+// This snippet is ignored. Check the raw markdown.
+someGlobalFunction();
+```
+
+DocCheck can also be used as a library.
+
+```ts path=src/examples/file2.ts
 /*
 
   You can also use DocCheck as a library!
@@ -95,16 +103,12 @@ Example `doc-check.json` file:
 
 ```json
 {
-  "include": [
-    // regex patterns
-  ],
+  "include": "**/*.md",
   "exclude": [
-    // regex patterns
+    "**/node_modules/**"
   ]
 }
 ```
-
-Note that in future, DocCheck will use globs instead of regex.
 
 ## How to use DocCheck?
 
