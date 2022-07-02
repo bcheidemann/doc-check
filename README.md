@@ -106,7 +106,17 @@ Example `doc-check.json` file:
   "include": "**/*.md",
   "exclude": [
     "**/node_modules/**"
-  ]
+  ],
+  "tsProjectOptions": {
+    "compilerOptions": {
+      "paths": {
+        "@package/name": [
+          "./src/index.ts"
+        ]
+      }
+    }
+  },
+  "root": "./",
 }
 ```
 

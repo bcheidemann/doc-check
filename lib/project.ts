@@ -42,10 +42,9 @@ export class Project extends TsmProject {
       ...options,
       exclude: concatArray(Project.DEFAULT_OPTIONS.exclude, options.exclude),
     };
-    const tsConfigFilePath = ts.findConfigFile(
-      resolvedOptions.root,
-      ts.sys.fileExists
-    );
+    const tsConfigFilePath =
+      options.tsProjectOptions?.tsConfigFilePath ||
+      ts.findConfigFile(resolvedOptions.root, ts.sys.fileExists);
     super({
       tsConfigFilePath: tsConfigFilePath,
       ...options.tsProjectOptions,
@@ -101,7 +100,9 @@ export class Project extends TsmProject {
             ["ts", "tsx", "js", "jsx"].includes(snippetOptions.lang)
           ) {
             const virtualSnippetFile: File = {
-              path: snippetOptions.path || `./${file.path}.${index++}.${content.lang}`,
+              path:
+                snippetOptions.path ||
+                `./${file.path}.${index++}.${content.lang}`,
               text: content.value,
             };
             this.createSourceFile(
