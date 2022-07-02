@@ -1,6 +1,6 @@
 {
   "name": "ts-doc-check",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Type check TypeScript and JavaScript snippets in markdown documents",
   "main": "./dist/lib/index.js",
   "bin": {
